@@ -46,6 +46,7 @@ conda activate gpt-oss-20b
 ```
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 pip install transformers accelerate bitsandbytes
+pip install intel-extension-for-transformers
 ```
 - torch : 모델을 실행 가능한 프로그램으로 만들어주는 Pytorch 프레임워크.
 - transformers : 모델의 아키텍처 사전 정의 및 추상화된 파이프라인 제공. 허깅 페이스와 연동되어 모델을 간단한 함수처럼 호출할 수 있게 도와주는 인터페이스 역할을 함.
@@ -58,3 +59,6 @@ pip install transformers accelerate bitsandbytes
 기본적으로 `gpt-oss` 모델은 MXFP4로 양자화가 되어있지만, 하드웨어 수준에서 MXFP4 포맷을 처리하는 기능은 50시리즈부터 탑재되어 있음. 
 따라서 4070ti는 사용 불가. => bitsandbytes로 시도해보자.
 
+양자화가 기본적으로 된 상태로 배포가 이루어지므로, 역양자화 한 상태로 모델을 불러온 뒤 bitsandbytes 로 양자화를 다시 수행해야한다.
+이를 위한 라이브러리가 intel-extension-for-transformers의 Mxfp4Config(dequantize=True)이다.
+[참고](https://github.com/huggingface/transformers/issues/39939#issuecomment-3164387479)
