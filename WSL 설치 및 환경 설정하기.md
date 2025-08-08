@@ -62,3 +62,43 @@ pip install intel-extension-for-transformers
 양자화가 기본적으로 된 상태로 배포가 이루어지므로, 역양자화 한 상태로 모델을 불러온 뒤 bitsandbytes 로 양자화를 다시 수행해야한다.
 이를 위한 라이브러리가 intel-extension-for-transformers의 Mxfp4Config(dequantize=True)이다.
 [참고](https://github.com/huggingface/transformers/issues/39939#issuecomment-3164387479)
+
+추가로, accelerate를 활용하여 메모리에 로드하고, 로컬에 저장할 경우 다음과 특정 레이어를 찾을 수 없는 문제가 발생할 수 있다.
+따라서 오직 cpu만을 사용하여 로드 및 저장해야 한다.(메모리가 부족하다면 스왑 메모리 설정으로 해결 가능)
+```angular2html
+Traceback (most recent call last):
+
+  File "/mnt/c/Users/gamec/IdeaProjects/gpt-oss-20b-local-llm/src/load_and_save_dequantize_gpt_oss_20b.py", line 30, in <module>
+
+    model.save_pretrained(save_path)
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/transformers/modeling_utils.py", line 4158, in save_pretrained
+
+    shard_state_dict = get_state_dict_from_offload(module, module_name, shard_state_dict)
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/accelerate/utils/modeling.py", line 1796, in get_state_dict_from_offload
+
+    with align_module_device(module, device_to_put_offload):
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/contextlib.py", line 135, in __enter__
+
+    return next(self.gen)
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/accelerate/utils/modeling.py", line 2180, in align_module_device
+
+    module._hf_hook.pre_forward(module)
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/accelerate/hooks.py", line 341, in pre_forward
+
+    value = self.weights_map[name]
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/accelerate/utils/offload.py", line 118, in __getitem__
+
+    return self.dataset[f"{self.prefix}{key}"]
+
+  File "/home/gamec/miniconda3/envs/gpt-oss-20b/lib/python3.10/site-packages/accelerate/utils/offload.py", line 165, in __getitem__
+
+    weight_info = self.index[key]
+
+KeyError: 'model.layers.12.mlp.experts.gate_up_proj'
+```
